@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Journey Continues — For Alya</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #030008;
+            color: #f3e8ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .glass-panel {
+            background: rgba(18, 5, 36, 0.45);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(224, 64, 251, 0.4);
+            box-shadow: 0 0 50px rgba(170, 0, 255, 0.25);
+        }
+        .neon-glow {
+            text-shadow: 0 0 20px rgba(224, 64, 251, 0.9), 0 0 40px rgba(170, 0, 255, 0.7);
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float-slow {
+            animation: floatSlow 5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen relative selection:bg-fuchsia-600 selection:text-white" onmousemove="handleMouseMove(event)">
+
+    <!-- Audio Element for ms2.mp3 -->
+    <audio id="bgMusic2" src="ms2.mp3" preload="auto" loop></audio>
+
+    <!-- Cinematic Fadeout Overlay Layer -->
+    <div id="fadeOverlay" class="fixed inset-0 bg-black z-50 opacity-0 pointer-events-none transition-opacity duration-1000"></div>
+
+    <!-- 3D Universe & Enhanced Alya Constellation Canvas -->
+    <canvas id="spaceCanvas"></canvas>
+
+    <!-- ==================== STAGE 1: INITIAL QUESTION SCREEN ==================== -->
+    <div id="stage1" class="content-layer w-full max-w-lg px-6 flex flex-col items-center text-center transition-opacity duration-1000">
+        <div class="glass-panel w-full rounded-3xl p-8 sm:p-10 flex flex-col items-center animate-float-slow">
+            
+            <p id="introDots" class="font-cinzel text-purple-300 tracking-[0.5em] text-xl mb-4 opacity-50 animate-pulse">
+                ......
+            </p>
+
+            <h1 id="introTitle" class="font-cinzel text-3xl sm:text-4xl font-bold text-purple-100 neon-glow mb-6 opacity-0 transition-opacity duration-1000">
+                the end of the journey
+            </h1>
+
+            <div id="stepQuestionBox" class="w-full opacity-0 transition-opacity duration-1000 flex flex-col items-center">
+                <p class="text-purple-200 text-sm sm:text-base font-light mb-6 leading-relaxed">
+                    did you do all the steps and rules at 10:30pm?
+                </p>
+
+                <button onclick="startSilenceStage()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-base tracking-widest hover:opacity-90 transition-all shadow-[0_0_25px_rgba(224,64,251,0.6)] transform hover:scale-105 active:scale-95">
+                    yes ✨
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== STAGE 2: SILENCE SCREEN (8 SECONDS) ==================== -->
+    <div id="stage2" class="content-layer fixed inset-0 bg-black z-30 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        <!-- Absolute dark silence -->
+    </div>
+
+    <!-- ==================== STAGE 3: STORY & UNIVERSE DIALOGUE SCREEN ==================== -->
+    <div id="stage3" class="content-layer fixed inset-0 z-40 flex flex-col items-center justify-between p-6 sm:p-12 opacity-0 pointer-events-none transition-opacity duration-1500">
+        
+        <!-- Top Spacer -->
+        <div class="h-12"></div>
+
+        <!-- Story Text Box -->
+        <div class="glass-panel max-w-2xl w-full rounded-3xl p-8 sm:p-10 text-center relative overflow-hidden min-h-[180px] flex items-center justify-center animate-float-slow">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-600/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-600/20 rounded-full blur-2xl"></div>
+            
+            <p id="storyDisplaytext" class="font-cinzel text-lg sm:text-2xl font-light text-purple-100 tracking-wide leading-relaxed drop-shadow-[0_0_15px_rgba(224,64,251,0.8)] transition-all duration-700">
+                <!-- Dynamic Story Line -->
+            </p>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="w-full max-w-md flex flex-col items-center gap-4 mb-6">
+            <button id="nextBtn" onclick="nextStoryStep()" class="px-8 py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-sm tracking-widest hover:opacity-90 transition-all shadow-[0_0_25px_rgba(224,64,251,0.5)] transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                <span>Continue</span>
+                <span>➔</span>
+            </button>
+
+            <!-- Final Secret Button (Hidden initially) -->
+            <button id="finalSecretBtn" onclick="goToTheEnd()" class="hidden px-8 py-4 rounded-full bg-gradient-to-r from-rose-600 via-fuchsia-600 to-purple-700 text-white font-bold font-cinzel text-base tracking-wider hover:opacity-90 transition-all shadow-[0_0_35px_rgba(255,0,60,0.8)] animate-pulse">
+                see what bird hides? 🌺
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript 3D Engine & Cinematic Fadeout Logic -->
+    <script>
+        // --- Advanced 3D Interactive Universe Engine ---
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+        let shootingStars = [];
+        let alyaParticles = [];
+        let mouseX = 0, mouseY = 0;
+        let targetMouseX = 0, targetMouseY = 0;
+        let bgTheme = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function handleMouseMove(e) {
+            targetMouseX = (e.clientX - width / 2) * 0.0009;
+            targetMouseY = (e.clientY - height / 2) * 0.0009;
+        }
+
+        // 3D Parallax Starfield Class
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = (Math.random() - 0.5) * width * 2.5;
+                this.y = (Math.random() - 0.5) * height * 2.5;
+                this.z = Math.random() * width;
+                this.size = Math.random() * 2 + 0.4;
+                this.twinkle = Math.random() * 0.05 + 0.01;
+                this.color = Math.random() > 0.25 ? '#ffffff' : (Math.random() > 0.5 ? '#ea80fc' : '#ff003c');
+            }
+            update() {
+                this.z -= 0.5; // Smooth movement towards viewer
+                if (this.z <= 0) {
+                    this.z = width;
+                    this.x = (Math.random() - 0.5) * width * 2.5;
+                    this.y = (Math.random() - 0.5) * height * 2.5;
+                }
+            }
+            draw() {
+                let k = 300 / this.z;
+                let px = this.x * k + width / 2 + mouseX * 60;
+                let py = this.y * k + height / 2 + mouseY * 60;
+
+                if (px >= 0 && px <= width && py >= 0 && py <= height) {
+                    let pSize = Math.max(0.2, this.size * k);
+                    ctx.save();
+                    ctx.globalAlpha = Math.min(1, (width - this.z) / width);
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        // Shooting Star / Meteor Class for rich cosmic atmosphere
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.len = Math.random() * 80 + 40;
+                this.speed = Math.random() * 8 + 6;
+                this.size = Math.random() * 1.5 + 0.8;
+                this.opacity = Math.random() * 0.7 + 0.3;
+                this.active = false;
+                this.timer = Math.random() * 300 + 100;
+            }
+            update() {
+                if (!this.active) {
+                    this.timer--;
+                    if (this.timer <= 0) {
+                        this.active = true;
+                        this.x = Math.random() * width * 0.8;
+                        this.y = Math.random() * (height * 0.4);
+                    }
+                    return;
+                }
+                this.x += this.speed;
+                this.y += this.speed;
+                if (this.x > width || this.y > height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(234, 128, 252, ' + this.opacity + ')';
+                ctx.lineWidth = this.size;
+                ctx.shadowColor = '#ea80fc';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x - this.len, this.y - this.len);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // 3D Matrix / Particle generator for word "ALYA"
+        function initAlyaParticles() {
+            alyaParticles = [];
+            const offCanvas = document.createElement('canvas');
+            const offCtx = offCanvas.getContext('2d');
+            offCanvas.width = 700;
+            offCanvas.height = 180;
+            offCtx.font = 'bold 110px Cinzel, serif';
+            offCtx.fillStyle = '#ffffff';
+            offCtx.textAlign = 'center';
+            offCtx.textBaseline = 'middle';
+            offCtx.fillText("ALYA", 350, 90);
+
+            const imgData = offCtx.getImageData(0, 0, 700, 180);
+            const pixels = imgData.data;
+
+            for (let y = 0; y < 180; y += 3) {
+                for (let x = 0; x < 700; x += 3) {
+                    let index = (y * 700 + x) * 4;
+                    if (pixels[index + 3] > 128) {
+                        alyaParticles.push({
+                            ox: x - 350,
+                            oy: y - 90,
+                            x: (Math.random() - 0.5) * width,
+                            y: (Math.random() - 0.5) * height,
+                            color: Math.random() > 0.3 ? '#ea80fc' : '#ff003c'
+                        });
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < 400; i++) stars.push(new Star());
+        for (let i = 0; i < 4; i++) shootingStars.push(new ShootingStar());
+        initAlyaParticles();
+
+        function drawUniverseBackground() {
+            mouseX += (targetMouseX - mouseX) * 0.05;
+            mouseY += (targetMouseY - mouseY) * 0.05;
+
+            // Clear screen
+            ctx.fillStyle = '#030008';
+            ctx.fillRect(0, 0, width, height);
+
+            // Dynamic Multi-layered Nebula Gradient
+            let grad = ctx.createRadialGradient(
+                width / 2 + mouseX * 250, 
+                height / 2 + mouseY * 250, 
+                80, 
+                width / 2, 
+                height / 2, 
+                width * 0.85
+            );
+            if (bgTheme === 0) {
+                grad.addColorStop(0, 'rgba(130, 0, 220, 0.25)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            } else if (bgTheme === 1) {
+                grad.addColorStop(0, 'rgba(255, 0, 90, 0.23)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            } else {
+                grad.addColorStop(0, 'rgba(0, 140, 255, 0.2)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            }
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Render Starfield & Shooting Stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            shootingStars.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            // Render 3D Enhanced Floating "ALYA" Constellation in the background
+            let centerX = width / 2;
+            let centerY = height * 0.28;
+            
+            ctx.save();
+            ctx.shadowColor = '#d500f9';
+            ctx.shadowBlur = 25;
+            alyaParticles.forEach(p => {
+                let targetX = centerX + p.ox * 1.6 + mouseX * 120;
+                let targetY = centerY + p.oy * 1.6 + mouseY * 120;
+                
+                p.x += (targetX - p.x) * 0.05;
+                p.y += (targetY - p.y) * 0.05;
+
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = 0.9;
+                ctx.fillRect(p.x, p.y, 2.5, 2.5);
+            });
+            ctx.restore();
+        }
+
+        function animateSpace() {
+            drawUniverseBackground();
+            requestAnimationFrame(animateSpace);
+        }
+        animateSpace();
+
+
+        // --- Story & Sequence Logic ---
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('introTitle').style.opacity = '1';
+                setTimeout(() => {
+                    document.getElementById('stepQuestionBox').style.opacity = '1';
+                }, 1000);
+            }, 800);
+        };
+
+        function startSilenceStage() {
+            const stage1 = document.getElementById('stage1');
+            const stage2 = document.getElementById('stage2');
+
+            stage1.style.opacity = '0';
+            setTimeout(() => {
+                stage1.style.display = 'none';
+                stage2.style.opacity = '1';
+                
+                // 8 seconds of absolute silence & dark
+                setTimeout(() => {
+                    stage2.style.opacity = '0';
+                    setTimeout(() => {
+                        stage2.style.display = 'none';
+                        startStorySequence();
+                    }, 1000);
+                }, 8000);
+
+            }, 700);
+        }
+
+        const storyLines = [
+            { text: "i see....", music: true, theme: 0 },
+            { text: "let me read you a story", music: false, theme: 0 },
+            { text: "there were two birds ...flying across the sky", music: false, theme: 1 },
+            { text: "bird & birdy", music: false, theme: 1 },
+            { text: "they were laughing and enjoying thir time in a peace", music: false, theme: 1 },
+            { text: "both of the birds compelete each other  they are like puzzelz", music: false, theme: 2 },
+            { text: "both know thier strong points and weekness too", music: false, theme: 2 },
+            { text: 'a curios bird asked the other "what you think when you look at the sky?"', music: false, theme: 0 },
+            { text: "birdy said hmm clouds ? and i dont look at the sky alot", music: false, theme: 0 },
+            { text: "the bird said no i meant deeply what do u see ?", music: false, theme: 0 },
+            { text: "the birdy hestatied abit and then said well i think about people and life when i look at the sky", music: false, theme: 1 },
+            { text: "the bird said and what about night ? what do u see in the sky at night", music: false, theme: 2 },
+            { text: "the birdy said MOON! and also i see stars", music: false, theme: 2 },
+            { text: "bird here got smiled and said oh do you love stars?", music: false, theme: 2 },
+            { text: "birdy said ..yess how i cant love it", music: false, theme: 2 },
+            { text: "bird said what do you love about them?", music: false, theme: 2 },
+            { text: "<b>birdy answerd i like how they are close to the moon more than us</b>", music: false, theme: 1 },
+            { text: "<b>and how they shine in the total darkness</b>", music: false, theme: 1 },
+            { text: "bird noded and said same", music: false, theme: 0 },
+            { text: "and then both of the birds left  with a happy smile on thier faces", music: false, theme: 0 },
+            { text: "...", music: false, theme: 0, pauseTimer: true }, // 12 seconds pause
+            { text: "but now birdy came back", music: false, theme: 2 },
+            { text: "and bird wants to show birdy smth", music: false, theme: 2 }
+        ];
+
+        let currentStep = 0;
+
+        function startStorySequence() {
+            const stage3 = document.getElementById('stage3');
+            stage3.style.opacity = '1';
+            stage3.classList.remove('pointer-events-none');
+            showCurrentLine();
+        }
+
+        function showCurrentLine() {
+            const display = document.getElementById('storyDisplaytext');
+            const nextBtn = document.getElementById('nextBtn');
+            const finalBtn = document.getElementById('finalSecretBtn');
+
+            if (currentStep < storyLines.length) {
+                let item = storyLines[currentStep];
+                display.style.opacity = '0';
+                
+                setTimeout(() => {
+                    display.innerHTML = item.text;
+                    display.style.opacity = '1';
+                    bgTheme = item.theme;
+
+                    // Play ms2.mp3 on "i see...."
+                    if (item.music) {
+                        const bgMusic2 = document.getElementById('bgMusic2');
+                        if (bgMusic2) {
+                            bgMusic2.play().catch(err => console.log("Audio block:", err));
+                        }
+                    }
+
+                    // 12 seconds pause segment
+                    if (item.pauseTimer) {
+                        nextBtn.style.display = 'none';
+                        setTimeout(() => {
+                            currentStep++;
+                            nextBtn.style.display = 'flex';
+                            showCurrentLine();
+                        }, 12000);
+                    }
+
+                }, 400);
+
+            } else {
+                nextBtn.style.display = 'none';
+                display.innerHTML = "Are you ready, Princess Alya? ✨";
+                finalBtn.classList.remove('hidden');
+            }
+        }
+
+        function nextStoryStep() {
+            if (!storyLines[currentStep].pauseTimer) {
+                currentStep++;
+                showCurrentLine();
+            }
+        }
+
+        // --- Cinematic Fadeout & Music Fadeout Transition (15 Seconds total) ---
+        function goToTheEnd() {
+            const stage3 = document.getElementById('stage3');
+            const fadeOverlay = document.getElementById('fadeOverlay');
+            const bgMusic2 = document.getElementById('bgMusic2');
+
+            // Hide UI elements smoothly
+            stage3.style.opacity = '0';
+
+            // Start visual fadeout over 15 seconds
+            fadeOverlay.style.transition = 'opacity 15s ease-in-out';
+            fadeOverlay.style.opacity = '1';
+
+            // Start audio fadeout gradually over ~14 seconds
+            if (bgMusic2) {
+                let vol = 1.0;
+                let fadeAudioInterval = setInterval(() => {
+                    vol -= 0.07;
+                    if (vol > 0) {
+                        bgMusic2.volume = Math.max(0, vol);
+                    } else {
+                        bgMusic2.volume = 0;
+                        bgMusic2.pause();
+                        clearInterval(fadeAudioInterval);
+                    }
+                }, 1000); // Gradual step every 1 second
+            }
+
+            // Redirect after 15 seconds of complete silence and darkness
+            setTimeout(() => {
+                window.location.href = "theend.htm";
+            }, 15000);
+        }
+    </script>
+</body>
+</html>

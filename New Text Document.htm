@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The End of the Journey — For Alya</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #030007;
+            color: #f3e8ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .glass-panel {
+            background: rgba(18, 5, 36, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(224, 64, 251, 0.35);
+        }
+        .neon-glow {
+            text-shadow: 0 0 15px rgba(224, 64, 251, 0.9), 0 0 30px rgba(255, 0, 60, 0.7);
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="relative flex items-center justify-center selection:bg-fuchsia-600 selection:text-white">
+
+    <!-- Audio for ms2.mp3 -->
+    <audio id="bgMusic2" src="ms2.mp3" preload="auto" loop></audio>
+
+    <!-- Canvas for Stars & ALYA Constellation -->
+    <canvas id="spaceCanvas"></canvas>
+
+    <!-- ==================== STAGE 1: THE JOURNEY ENDS SCREEN ==================== -->
+    <div id="stage1" class="absolute inset-0 z-20 bg-black flex flex-col items-center justify-center p-6 text-center transition-opacity duration-1000">
+        <h1 id="journeyText" class="font-cinzel text-3xl sm:text-5xl font-black text-purple-100 neon-glow opacity-0 transition-opacity duration-1000 mb-8">
+            the end of the journey
+        </h1>
+        
+        <div id="ruleQuestionBox" class="glass-panel max-w-md w-full rounded-3xl p-8 opacity-0 transition-opacity duration-1000 shadow-2xl">
+            <p class="font-cinzel text-lg text-purple-200 mb-6 leading-relaxed">
+                did you do all the steps and rules at 10:30pm?
+            </p>
+            <button onclick="startSilenceStage()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-base tracking-wider hover:opacity-90 transition-all shadow-[0_0_25px_rgba(255,0,60,0.5)]">
+                Yes ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== STAGE 2: STORY & QTE SCREEN ==================== -->
+    <div id="stage2" class="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        
+        <!-- Story Text Container -->
+        <div class="max-w-2xl px-4 min-h-[160px] flex items-center justify-center z-30">
+            <p id="storyDisplay" class="font-cinzel text-xl sm:text-3xl font-medium text-purple-100 neon-glow leading-relaxed opacity-0 transition-opacity duration-1000">
+                <!-- Story sentences will load here -->
+            </p>
+        </div>
+
+        <!-- QTE Prompt -->
+        <div id="qtePrompt" class="absolute bottom-16 z-30 opacity-0 transition-opacity duration-700 pointer-events-none">
+            <p class="text-xs sm:text-sm text-fuchsia-300 tracking-widest uppercase bg-purple-950/80 px-6 py-2.5 rounded-full border border-fuchsia-500/40 shadow-lg animate-pulse">
+                to get the full story you must click on the screen when it shows up
+            </p>
+        </div>
+
+        <!-- Final Button to The End -->
+        <div id="finalButtonBox" class="absolute bottom-20 z-30 opacity-0 pointer-events-none transition-all duration-1000">
+            <button onclick="goToTheEnd()" class="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-lg tracking-wider hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,0,60,0.8)]">
+                see what bird hides? 🕊️
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Starry Canvas & ALYA Constellation Engine ---
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+        let showAlyaConstellation = false;
+        let constellationAlpha = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2 + 0.5;
+                this.baseAlpha = Math.random() * 0.7 + 0.2;
+                this.twinkleSpeed = Math.random() * 0.03 + 0.01;
+            }
+            update() {
+                this.baseAlpha += Math.sin(Date.now() * this.twinkleSpeed) * 0.01;
+                if (this.baseAlpha < 0.1) this.baseAlpha = 0.1;
+                if (this.baseAlpha > 1) this.baseAlpha = 1;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.baseAlpha;
+                ctx.fillStyle = '#ea80fc';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 150; i++) stars.push(new Star());
+
+        // ALYA Letter Coordinate Map (Scaled to screen center)
+        function drawAlyaConstellation() {
+            if (!showAlyaConstellation) return;
+            if (constellationAlpha < 1) constellationAlpha += 0.02;
+
+            ctx.save();
+            ctx.globalAlpha = constellationAlpha;
+            ctx.strokeStyle = '#ff003c';
+            ctx.fillStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = '#ff003c';
+            ctx.shadowBlur = 18;
+
+            const cx = width / 2 - 220;
+            const cy = height / 2 - 60;
+            const scale = 2.2;
+
+            // Coordinates for A L Y A
+            const aPoints = [[cx, cy+80*scale], [cx+30*scale, cy], [cx+60*scale, cy+80*scale], [cx+15*scale, cy+40*scale], [cx+45*scale, cy+40*scale]];
+            const lPoints = [[cx+90*scale, cy], [cx+90*scale, cy+80*scale], [cx+130*scale, cy+80*scale]];
+            const yPoints = [[cx+160*scale, cy], [cx+180*scale, cy+40*scale], [cx+200*scale, cy], [cx+180*scale, cy+40*scale], [cx+180*scale, cy+80*scale]];
+            const a2Points = [[cx+230*scale, cy+80*scale], [cx+260*scale, cy], [cx+290*scale, cy+80*scale], [cx+245*scale, cy+40*scale], [cx+275*scale, cy+40*scale]];
+
+            const letters = [aPoints, lPoints, yPoints, a2Points];
+
+            letters.forEach(letter => {
+                ctx.beginPath();
+                ctx.moveTo(letter[0][0], letter[0][1]);
+                for (let i = 1; i < letter.length; i++) {
+                    ctx.lineTo(letter[i][0], letter[i][1]);
+                }
+                ctx.stroke();
+
+                // Draw glowing dots on vertices
+                letter.forEach(pt => {
+                    ctx.beginPath();
+                    ctx.arc(pt[0], pt[1], 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                });
+            });
+
+            ctx.restore();
+        }
+
+        function animateSpace() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(s => { s.update(); s.draw(); });
+            drawAlyaConstellation();
+            requestAnimationFrame(animateSpace);
+        }
+        animateSpace();
+
+        // --- Flow Sequence Logic ---
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('journeyText').style.opacity = '1';
+                setTimeout(() => {
+                    document.getElementById('ruleQuestionBox').style.opacity = '1';
+                }, 1000);
+            }, 600);
+        };
+
+        function startSilenceStage() {
+            const stage1 = document.getElementById('stage1');
+            stage1.style.opacity = '0';
+
+            setTimeout(() => {
+                stage1.style.display = 'none';
+                
+                // ⏳ Silence for 8 seconds
+                setTimeout(() => {
+                    startCosmicStorySequence();
+                }, 8000);
+
+            }, 1000);
+        }
+
+        function startCosmicStorySequence() {
+            // Play ms2.mp3
+            const bgMusic2 = document.getElementById('bgMusic2');
+            if (bgMusic2) {
+                bgMusic2.play().catch(err => console.log("Audio play error:", err));
+            }
+
+            const stage2 = document.getElementById('stage2');
+            stage2.classList.remove('pointer-events-none');
+            stage2.style.opacity = '1';
+
+            const display = document.getElementById('storyDisplay');
+
+            // Message sequence before story
+            display.innerText = "i see....";
+            display.style.opacity = '1';
+
+            setTimeout(() => {
+                display.style.opacity = '0';
+                setTimeout(() => {
+                    display.innerText = "let me read you a story";
+                    display.style.opacity = '1';
+
+                    setTimeout(() => {
+                        display.style.opacity = '0';
+                        setTimeout(beginBirdStory, 1200);
+                    }, 3500);
+
+                }, 1000);
+            }, 3000);
+        }
+
+        // Story Lines with QTE triggers
+        const storyLines = [
+            "there were two birds ...flying across the sky",
+            "bird & birdy",
+            "they were laughing and enjoying thir time in a peace",
+            "both of the birds compelete each other  they are like puzzelz",
+            "both know thier strong points and weekness too",
+            "a curios bird asked the other \"what you think when you look at the sky?\"",
+            "birdy said hmm clouds ? and i dont look at the sky alot",
+            "the bird said no i meant deeply what do u see ?",
+            "the birdy hestatied abit and then said well i think about people and life when i look at the sky",
+            "the bird said and what about night ? what do u see in the sky at night",
+            "the birdy said MOON! and also i see stars",
+            "bird here got smiled and said oh do you love stars?",
+            "birdy said ..yess how i cant love it",
+            "bird said what do you love about them?",
+            "birdy answerd i like how they are close to the moon more than use",
+            "<b>and how they shine in the total darkness</b>", // Bold line
+            "bird noded and said same",
+            "and then both of the birds left  with a happy smile on thier faces"
+        ];
+
+        let currentLineIndex = 0;
+        let waitingForQTE = false;
+
+        function beginBirdStory() {
+            showNextStoryStep();
+        }
+
+        function showNextStoryStep() {
+            if (currentLineIndex < storyLines.length) {
+                const display = document.getElementById('storyDisplay');
+                display.innerHTML = storyLines[currentLineIndex];
+                display.style.opacity = '1';
+
+                // Pause slightly before 12-second middle checkpoint
+                if (currentLineIndex === 8) {
+                    // Trigger QTE prompt
+                    document.getElementById('qtePrompt').style.opacity = '1';
+                    waitingForQTE = true;
+                    return; // Wait for click
+                }
+
+                const readingTime = 3800; // reading pacing
+
+                setTimeout(() => {
+                    display.style.opacity = '0';
+                    setTimeout(() => {
+                        currentLineIndex++;
+                        showNextStoryStep();
+                    }, 1000);
+                }, readingTime);
+
+            } else {
+                // After ~12 seconds rest after final story line
+                setTimeout(() => {
+                    const display = document.getElementById('storyDisplay');
+                    display.innerHTML = "but now birdy came back <br> and bird wants to show birdy smth";
+                    display.style.opacity = '1';
+
+                    setTimeout(() => {
+                        document.getElementById('finalButtonBox').style.opacity = '1';
+                        document.getElementById('finalButtonBox').classList.remove('pointer-events-none');
+                    }, 2500);
+
+                }, 12000); // 12 seconds rest as requested
+            }
+        }
+
+        // QTE Click Handler anywhere on screen
+        window.addEventListener('click', () => {
+            if (waitingForQTE) {
+                waitingForQTE = false;
+                document.getElementById('qtePrompt').style.opacity = '0';
+                
+                // ✨ Trigger ALYA Constellation in background
+                showAlyaConstellation = true;
+
+                const display = document.getElementById('storyDisplay');
+                display.style.opacity = '0';
+
+                setTimeout(() => {
+                    currentLineIndex++;
+                    showNextStoryStep();
+                }, 1000);
+            }
+        });
+
+        function goToTheEnd() {
+            window.location.href = "theend.htm";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020005">
+    <title>The End — For Princess Alya</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020005;
+            color: #f3e8ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+
+        .glass-panel {
+            background: rgba(15, 3, 30, 0.65);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(224, 64, 251, 0.35);
+            box-shadow: 0 0 60px rgba(170, 0, 255, 0.2);
+        }
+        .neon-glow {
+            text-shadow: 0 0 25px rgba(224, 64, 251, 0.95), 0 0 50px rgba(170, 0, 255, 0.8);
+        }
+
+        /* ============ WORLD LAYER (shakes during the climax) ============ */
+        #world {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            transform-origin: 50% 50%;
+            will-change: transform;
+        }
+        #spaceCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #core {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 40vmin; height: 40vmin;
+            margin: -20vmin 0 0 -20vmin;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(245,208,254,.92) 18%, rgba(217,70,239,.55) 45%, rgba(124,58,237,0) 70%);
+            opacity: 0;
+            transform: scale(0);
+            mix-blend-mode: screen;
+            will-change: transform, opacity;
+        }
+        #wordsLayer { position: absolute; inset: 0; overflow: hidden; }
+        .fw {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            letter-spacing: .12em;
+            white-space: nowrap;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+        .ring {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 30vmin; height: 30vmin;
+            margin: -15vmin 0 0 -15vmin;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,.9);
+            box-shadow: 0 0 40px rgba(217,70,239,.9), inset 0 0 40px rgba(217,70,239,.6);
+            will-change: transform, opacity;
+        }
+
+        /* ============ FLASH OVERLAYS ============ */
+        #flashGlow {
+            position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0) 28%, rgba(217,70,239,.55) 72%, rgba(255,255,255,.85) 100%);
+            mix-blend-mode: screen;
+        }
+        #flashWhite {
+            position: fixed; inset: 0; z-index: 61; pointer-events: none; opacity: 0;
+            background: #fff;
+        }
+
+        /* ============ CURSOR GLOW ============ */
+        #cursorGlow {
+            position: fixed; left: 0; top: 0; width: 380px; height: 380px;
+            margin: -190px 0 0 -190px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(192,38,211,.20) 0%, rgba(124,58,237,.08) 40%, rgba(0,0,0,0) 70%);
+            pointer-events: none; z-index: 5; mix-blend-mode: screen;
+            will-change: transform;
+        }
+        @media (hover: none) { #cursorGlow { display: none; } }
+
+        .content-layer { position: relative; z-index: 10; }
+
+        /* ============ DIALOGUE LETTER ANIMATION ============ */
+        .fade-text {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 1.6s ease-in-out, transform 1.6s ease-in-out, filter 1.6s ease-in-out;
+        }
+        .fade-text.visible { opacity: 1; transform: translateY(0); filter: none; }
+        .fade-text.hidden-text { opacity: 0; transform: translateY(-14px) scale(1.04); filter: blur(8px); }
+        .w { display: inline-block; white-space: nowrap; }
+        .ch {
+            display: inline-block;
+            opacity: 0;
+            animation: chIn .8s cubic-bezier(.2,.7,.2,1) forwards;
+        }
+        @keyframes chIn {
+            0%   { opacity: 0; transform: translateY(18px) scale(1.35); filter: blur(10px); }
+            100% { opacity: 1; transform: none; filter: blur(0); }
+        }
+        @keyframes textBreath {
+            0%,100% { text-shadow: 0 0 14px rgba(224,64,251,.7); }
+            50%     { text-shadow: 0 0 30px rgba(224,64,251,1), 0 0 60px rgba(170,0,255,.8); }
+        }
+        #sequenceText.visible { animation: textBreath 2.6s ease-in-out infinite; }
+
+        /* ============ REVEAL ============ */
+        #revealSection { display: none; }
+        #revealSection.show { display: flex; }
+
+        .rv, .rv-line {
+            opacity: 0;
+            transform: translateY(46px) scale(.97);
+            filter: blur(10px);
+            transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1), filter 1.1s ease;
+        }
+        .rv-line { transform: translateX(-26px); transition-duration: .9s; }
+        .rv.in, .rv-line.in { opacity: 1; transform: none; filter: none; }
+
+        .cert-wrap { opacity: 0; }
+        .cert-wrap.enter { animation: certIn 2.6s cubic-bezier(.16,1,.3,1) forwards; }
+        @keyframes certIn {
+            0%   { opacity: 0; transform: perspective(1000px) translateZ(-900px) rotateX(55deg) scale(.2); filter: blur(30px) brightness(4); }
+            55%  { opacity: 1; filter: blur(2px) brightness(1.8); }
+            100% { opacity: 1; transform: perspective(1000px) translateZ(0) rotateX(0) scale(1); filter: blur(0) brightness(1); }
+        }
+        .cert-glow { animation: breathe 4s ease-in-out 2.6s infinite; }
+        @keyframes breathe {
+            0%,100% { box-shadow: 0 0 70px rgba(224,64,251,.45); }
+            50%     { box-shadow: 0 0 140px rgba(224,64,251,.85), 0 0 40px rgba(255,255,255,.25); }
+        }
+        .shine::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+            transform: translateX(-120%);
+            animation: sweep 5s ease-in-out 3s infinite;
+        }
+        @keyframes sweep { 0% { transform: translateX(-120%); } 40%,100% { transform: translateX(120%); } }
+
+        .tilt { transition: transform .25s ease-out; will-change: transform; }
+
+        .finish-btn { animation: btnPulse 2.4s ease-in-out infinite; }
+        @keyframes btnPulse {
+            0%,100% { box-shadow: 0 0 25px rgba(255,0,60,.45); }
+            50%     { box-shadow: 0 0 55px rgba(255,0,60,.9), 0 0 25px rgba(217,70,239,.8); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cert-glow, .shine::after, .finish-btn { animation: none; }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen relative selection:bg-fuchsia-600 selection:text-white">
+
+    <!-- Audio Element for ms3.mp3 -->
+    <audio id="bgMusic3" src="ms3.mp3" preload="auto" loop></audio>
+
+    <!-- Cinematic Fadeout Overlay Layer -->
+    <div id="fadeOverlay" class="fixed inset-0 bg-black z-[80] opacity-0 pointer-events-none transition-opacity duration-1000"></div>
+
+    <!-- Flash overlays (climax) -->
+    <div id="flashGlow"></div>
+    <div id="flashWhite"></div>
+
+    <!-- Cursor glow -->
+    <div id="cursorGlow"></div>
+
+    <!-- WORLD: starfield + climax words (this layer shakes) -->
+    <div id="world">
+        <canvas id="spaceCanvas"></canvas>
+        <div id="core"></div>
+        <div id="wordsLayer"></div>
+    </div>
+
+    <!-- FULLSCREEN PROMPT OVERLAY -->
+    <div id="fsPrompt" onclick="requestFullscreenMode()" class="fixed inset-0 bg-black/90 z-[70] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-opacity duration-700">
+        <div class="glass-panel p-8 rounded-3xl max-w-md animate-pulse">
+            <span class="text-3xl mb-3 block">✨</span>
+            <h2 class="font-cinzel text-xl font-bold text-purple-100 mb-2">Welcome to the Final Chapter</h2>
+            <p class="text-sm text-purple-300">Click anywhere to enter immersive full screen mode...</p>
+            <p class="text-xs text-fuchsia-300/80 mt-4">🔊 sound on &nbsp;·&nbsp; ⚠️ contains flashing lights &amp; shaking</p>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN CONTAINER ==================== -->
+    <main class="content-layer w-full max-w-4xl px-4 py-16 flex flex-col items-center text-center">
+
+        <!-- STAGE 1: DIALOGUE -->
+        <div id="dialogueContainer" class="min-h-[250px] flex items-center justify-center my-auto px-4">
+            <p id="sequenceText" class="fade-text font-cinzel text-xl sm:text-3xl font-light text-purple-100 tracking-wide leading-relaxed max-w-2xl"></p>
+        </div>
+
+        <!-- STAGE 3: THE REVEAL -->
+        <div id="revealSection" class="w-full flex-col items-center">
+
+            <!-- Star Certificate -->
+            <div id="certWrap" class="cert-wrap mb-12 max-w-2xl w-full">
+                <div class="glass-panel tilt cert-glow p-4 sm:p-6 rounded-3xl border border-fuchsia-500/50">
+                    <div class="shine overflow-hidden rounded-2xl relative shadow-2xl bg-black/50">
+                        <img src="alya.png" alt="Princess Alya Star Certificate" class="w-full h-auto object-contain max-h-[600px] mx-auto filter contrast-105">
+                    </div>
+                    <p class="text-xs text-purple-300 mt-4 tracking-wider uppercase font-cinzel">Official Star Registry Certificate — Ursa Minor</p>
+                </div>
+            </div>
+
+            <!-- Deep Emotional Message -->
+            <div class="rv max-w-3xl w-full mb-12">
+                <div class="glass-panel tilt rounded-3xl p-8 sm:p-12 text-left shadow-2xl border border-fuchsia-500/30 leading-relaxed">
+                    <div class="font-cinzel text-base sm:text-lg font-light text-purple-100 space-y-6 tracking-wide">
+                        <p class="rv-line">I named this star princess alya...</p>
+                        <p class="rv-line">just like how your name was choosen when u were born ..</p>
+                        <p class="rv-line">this star now has a new name with a new story</p>
+                        <p class="rv-line text-fuchsia-200 font-semibold">a strong shinnnig star just like you alya ...</p>
+                        <p class="rv-line">you were the star that you were talking about</p>
+                        <p class="rv-line">the star that shines in the total darkness</p>
+                        <p class="rv-line">the star that faced everything her life was not easy</p>
+                        <p class="rv-line">but always she finds a way to shine again and again</p>
+                        <p class="rv-line">and she doesnt shine for herself too she shines for the close plants like a hope she changed them from total darkness into brightful plants too</p>
+                        <p class="rv-line text-rose-300 font-semibold">that star is you and always will be you</p>
+                        <p class="rv-line">dont doubt yourself ever alya</p>
+                        <p class="rv-line">iam sure u were shiing even before i was in your life as you yourself strong</p>
+                        <p class="rv-line text-fuchsia-300 font-medium">promise me that you will shine for the entirety no matter what happens . wethter iam in your life or not . wether you reached your lowest point</p>
+                        <p class="rv-line font-bold text-purple-50">keep going...keep shining ..i saw in the world the crulty the bad things nad you ..you were the change to all of that</p>
+                        <p class="rv-line">the world needs you alya and iam not saying this as of me only</p>
+                        <p class="rv-line">look at your friends too ... you may not notice that but i do notice when u are around they become happier ..even animals remmber that dog ?</p>
+                        <p class="rv-line">she saw a pure innocent soul just like her soul thats why it was following you rather than anyone else</p>
+                        <p class="rv-line text-rose-200 font-semibold">keep shining just like the star above my and all the world star alya</p>
+                        <div class="rv-line pt-6 border-t border-purple-500/30 text-right font-cinzel text-sm text-fuchsia-300">
+                            <p>-MXM</p>
+                            <p>/Youssef</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Star Technical Info Box -->
+            <div class="rv max-w-3xl w-full mb-10">
+                <div class="glass-panel tilt rounded-3xl p-8 sm:p-10 text-left border border-purple-500/40 shadow-xl">
+                    <h3 class="font-cinzel text-xl font-bold text-fuchsia-300 mb-6 text-center neon-glow">🌟 Star Dedication &amp; Astronomical Info</h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-purple-200 mb-6">
+                        <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span class="text-xs text-fuchsia-400 block mb-1 uppercase tracking-wider">Dedication</span>
+                            <p class="font-semibold text-purple-100">A special star in the sky for Alya</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span class="text-xs text-fuchsia-400 block mb-1 uppercase tracking-wider">Named On</span>
+                            <p class="font-semibold text-purple-100">October 23, 2026</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span class="text-xs text-fuchsia-400 block mb-1 uppercase tracking-wider">Named By</span>
+                            <p class="font-semibold text-purple-100">Youssef MXM</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20">
+                            <span class="text-xs text-fuchsia-400 block mb-1 uppercase tracking-wider">Constellation</span>
+                            <p class="font-semibold text-purple-100">Ursa Minor (Little Bear)</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 text-xs sm:text-sm text-purple-300 font-mono bg-black/40 p-5 rounded-xl border border-purple-500/20 mb-6">
+                        <p>● <strong>Declination:</strong> 74.8778°</p>
+                        <p>● <strong>Right ascension:</strong> 16h 38m 45.01s (249.68755°)</p>
+                        <p>● <strong>Magnitude:</strong> 13.22 mag</p>
+                        <p>● <strong>UCAC3-Identifier:</strong> 137216681</p>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-purple-200 leading-relaxed mb-6 font-light">
+                        In September, this star can be viewed from Egypt in the evening. Around 8:30pm in early September (Eastern European Summer Time), it can be found at an elevation of 40° in the north. Please make sure that no obstacles (such as buildings, mountains, or trees) are impeding your view.
+                    </p>
+
+                    <div class="text-center">
+                        <a href="https://www.staracle.com/staracle/staracle.php?Tycho=10137216681" target="_blank" class="inline-block px-6 py-3 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 text-fuchsia-200 font-semibold text-sm border border-fuchsia-500/40 transition-all shadow-[0_0_20px_rgba(170,0,255,0.3)]">
+                            View Star on National Map ✨
+                        </a>
+                        <p class="text-xs text-purple-400 mt-2">here you can see it in stars national map and yes its visible from here check it :)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Closing & Finish Button -->
+            <div class="rv flex flex-col items-center gap-4 pb-16">
+                <p class="font-cinzel text-lg text-purple-200">i hope you liked this surprise 💜</p>
+                <button onclick="finishJourney()" class="finish-btn px-10 py-4 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-base tracking-widest hover:opacity-90 transition-all transform hover:scale-105 active:scale-95">
+                    finish and go back to main site 🌌
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+    /* =====================================================================
+       BASICS
+    ===================================================================== */
+    const $ = id => document.getElementById(id);
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const rnd = a => (Math.random() * 2 - 1) * a;
+    const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const R = reduced ? 0.3 : 1;
+
+    const world = $('world'), canvas = $('spaceCanvas'), ctx = canvas.getContext('2d');
+    const wordsLayer = $('wordsLayer'), core = $('core');
+    const flashWhite = $('flashWhite'), flashGlow = $('flashGlow');
+    const cursorGlow = $('cursorGlow');
+
+    let W = 0, H = 0, dpr = 1;
+    function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const state = {
+        baseSpeed: 0.35, baseTarget: 0.35,
+        warp: 0, warpTarget: 0,
+        climax: false, p: 0, glow: 0, kick: 0,
+        mx: .5, my: .5, px: .5, py: .5,
+        revealed: false
+    };
+    const mouse = { x: innerWidth / 2, y: innerHeight / 2, gx: innerWidth / 2, gy: innerHeight / 2 };
+    const PAL = ['#ffffff', '#f5d0fe', '#e879f9', '#c084fc', '#fb7185', '#a5f3fc', '#fde68a'];
+
+    /* =====================================================================
+       AUDIO (synth riser / thuds / boom — works on top of ms3.mp3)
+    ===================================================================== */
+    let AC = null;
+    function initAudio() { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
+    function thud(vol, freq) {
+        if (!AC) return;
+        try {
+            const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(freq * 1.8, t);
+            o.frequency.exponentialRampToValueAtTime(freq * 0.6, t + .18);
+            g.gain.setValueAtTime(vol, t);
+            g.gain.exponentialRampToValueAtTime(.001, t + .25);
+            o.connect(g).connect(AC.destination);
+            o.start(t); o.stop(t + .3);
+        } catch (e) {}
+    }
+    function riser(sec) {
+        if (!AC) return;
+        try {
+            const t = AC.currentTime;
+            const o = AC.createOscillator(); o.type = 'sawtooth';
+            o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(2200, t + sec);
+            const o2 = AC.createOscillator(); o2.type = 'triangle';
+            o2.frequency.setValueAtTime(140, t); o2.frequency.exponentialRampToValueAtTime(4400, t + sec);
+            const f = AC.createBiquadFilter(); f.type = 'lowpass';
+            f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(9000, t + sec);
+            const g = AC.createGain();
+            g.gain.setValueAtTime(.0001, t);
+            g.gain.exponentialRampToValueAtTime(.07, t + sec);
+            g.gain.linearRampToValueAtTime(0, t + sec + .05);
+            o.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination);
+            o.start(t); o2.start(t); o.stop(t + sec + .1); o2.stop(t + sec + .1);
+        } catch (e) {}
+    }
+    function boom() {
+        if (!AC) return;
+        try {
+            const t = AC.currentTime;
+            const o = AC.createOscillator(); o.type = 'sine';
+            o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(30, t + 1.6);
+            const g = AC.createGain();
+            g.gain.setValueAtTime(.9, t); g.gain.exponentialRampToValueAtTime(.001, t + 2.2);
+            o.connect(g).connect(AC.destination); o.start(t); o.stop(t + 2.3);
+            const len = Math.floor(AC.sampleRate * 1.6);
+            const buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+            const n = AC.createBufferSource(); n.buffer = buf;
+            const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2500;
+            const ng = AC.createGain(); ng.gain.value = .5;
+            n.connect(lp).connect(ng).connect(AC.destination); n.start(t);
+        } catch (e) {}
+    }
+    function vibrate(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+    /* =====================================================================
+       STARFIELD (3D warp stars + twinkling background + nebula + shooting stars)
+    ===================================================================== */
+    const DEPTH = 1400, FOCAL = 300;
+    const STAR_COLORS = ['#ffffff', '#ffffff', '#ffffff', '#ea80fc', '#ff4d79', '#a5b4fc'];
+    const stars = [];
+    function resetStar(s, init) {
+        s.x = (Math.random() - .5) * W * 2.2;
+        s.y = (Math.random() - .5) * H * 2.2;
+        s.z = init ? Math.random() * DEPTH : DEPTH;
+        s.s = Math.random() * 1.6 + .5;
+        s.c = STAR_COLORS[(Math.random() * STAR_COLORS.length) | 0];
+        s.tw = Math.random() * 6.28;
+        return s;
+    }
+    for (let i = 0; i < 700; i++) stars.push(resetStar({}, true));
+
+    const bgStars = [];
+    for (let i = 0; i < 180; i++) bgStars.push({
+        x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + .3,
+        ph: Math.random() * 6.28, sp: Math.random() * .002 + .0008,
+        c: STAR_COLORS[(Math.random() * STAR_COLORS.length) | 0]
+    });
+
+    function drawNebula(t) {
+        const blobs = [
+            { x: .2, y: .3, r: .55, c: '150,0,255' },
+            { x: .8, y: .7, r: .6, c: '255,0,120' },
+            { x: .5, y: .5, r: .45, c: '60,0,200' }
+        ];
+        const m = Math.max(W, H);
+        blobs.forEach((b, i) => {
+            const ox = Math.sin(t * .0002 + i * 2) * .08, oy = Math.cos(t * .00017 + i * 3) * .08;
+            const cx = W * (b.x + ox), cy = H * (b.y + oy);
+            const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, m * b.r);
+            const a = .10 + .05 * Math.sin(t * .001 + i) + state.glow * .28;
+            g.addColorStop(0, `rgba(${b.c},${a})`);
+            g.addColorStop(1, `rgba(${b.c},0)`);
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+        });
+    }
+
+    function drawBgStars(t) {
+        const ox = (state.px - .5) * -14, oy = (state.py - .5) * -10;
+        let lines = 0;
+        for (const s of bgStars) {
+            const x = s.x * W + ox * s.r * 2, y = s.y * H + oy * s.r * 2;
+            const a = .25 + .6 * (.5 + .5 * Math.sin(t * s.sp + s.ph));
+            ctx.globalAlpha = a;
+            ctx.fillStyle = s.c;
+            ctx.beginPath(); ctx.arc(x, y, s.r, 0, 6.2832); ctx.fill();
+            // constellation lines towards the cursor
+            if (lines < 9) {
+                const dx = x - mouse.x, dy = y - mouse.y, d = Math.hypot(dx, dy);
+                if (d < 150) {
+                    ctx.globalAlpha = (1 - d / 150) * .5;
+                    ctx.strokeStyle = '#e879f9'; ctx.lineWidth = .7;
+                    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                    lines++;
+                }
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function drawStars(speed, f, t) {
+        const cx = W / 2 + (state.px - .5) * -60, cy = H / 2 + (state.py - .5) * -40;
+        const streak = speed > 2.5;
+        for (const s of stars) {
+            s.z -= speed * f;
+            if (s.z <= 2) resetStar(s, false);
+            const k = FOCAL / s.z;
+            const x = cx + s.x * k, y = cy + s.y * k;
+            if (x < -60 || x > W + 60 || y < -60 || y > H + 60) continue;
+            const a = Math.min(1, (1 - s.z / DEPTH) * 1.8) * (.75 + .25 * Math.sin(t * .003 + s.tw));
+            ctx.globalAlpha = a;
+            if (streak) {
+                const pk = FOCAL / (s.z + speed * 1.8);
+                ctx.strokeStyle = s.c;
+                ctx.lineWidth = Math.min(4, Math.max(.6, s.s * k * .9));
+                ctx.beginPath(); ctx.moveTo(cx + s.x * pk, cy + s.y * pk); ctx.lineTo(x, y); ctx.stroke();
+            } else {
+                const r = Math.min(3.2, Math.max(.3, s.s * k * .8));
+                ctx.fillStyle = s.c;
+                ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+                if (r > 1.6) { ctx.globalAlpha = a * .18; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 6.2832); ctx.fill(); }
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    const shooting = [];
+    function spawnShooting() {
+        if (shooting.length > 25) return;
+        shooting.push({ x: Math.random() * W * 1.2, y: -20 - Math.random() * H * .2, vx: -(8 + Math.random() * 10), vy: 4 + Math.random() * 7, len: 90 + Math.random() * 120, life: 1 });
+    }
+    function drawShooting(f) {
+        for (let i = shooting.length - 1; i >= 0; i--) {
+            const s = shooting[i];
+            s.x += s.vx * f; s.y += s.vy * f; s.life -= .012 * f;
+            if (s.life <= 0 || s.x < -200 || s.y > H + 100) { shooting.splice(i, 1); continue; }
+            const mag = Math.hypot(s.vx, s.vy);
+            const tx = s.x - s.vx / mag * s.len, ty = s.y - s.vy / mag * s.len;
+            const g = ctx.createLinearGradient(tx, ty, s.x, s.y);
+            g.addColorStop(0, 'rgba(255,255,255,0)');
+            g.addColorStop(1, `rgba(255,255,255,${Math.min(1, s.life * 1.4)})`);
+            ctx.strokeStyle = g; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(s.x, s.y); ctx.stroke();
+            ctx.globalAlpha = s.life; ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(s.x, s.y, 2.2, 0, 6.2832); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    /* ---------- particles (mouse sparkles, bursts, ambient rain) ---------- */
+    const particles = [];
+    function sparkle(x, y) {
+        if (particles.length > 700) return;
+        particles.push({ x, y, vx: rnd(.6), vy: rnd(.6) - .2, life: 1, decay: .02 + Math.random() * .02, size: Math.random() * 2 + 1, c: PAL[(Math.random() * PAL.length) | 0], g: 0 });
+    }
+    function burst(x, y, n, power, mega) {
+        for (let i = 0; i < n; i++) {
+            if (particles.length > 900) break;
+            const a = Math.random() * 6.2832, sp = power * (.25 + Math.random() * .75);
+            particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, decay: mega ? .004 + Math.random() * .008 : .012 + Math.random() * .02, size: mega ? 1.5 + Math.random() * 4 : 1 + Math.random() * 2.5, c: PAL[(Math.random() * PAL.length) | 0], g: mega ? .02 : .03 });
+        }
+    }
+    function ambient() {
+        if (particles.length > 500) return;
+        particles.push({ x: Math.random() * W, y: -10, vx: rnd(.3), vy: .6 + Math.random() * 1.2, life: 1, decay: .004 + Math.random() * .004, size: Math.random() * 2 + .8, c: PAL[(Math.random() * 4) | 0], g: 0 });
+    }
+    function drawParticles(f) {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx * f; p.y += p.vy * f; p.vy += p.g * f; p.vx *= .992;
+            p.life -= p.decay * f;
+            if (p.life <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue; }
+            ctx.globalAlpha = Math.min(1, p.life * 1.2);
+            ctx.fillStyle = p.c;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (.4 + p.life * .6), 0, 6.2832); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* ---------- pointer interaction ---------- */
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX; mouse.y = e.clientY;
+        state.mx = e.clientX / W; state.my = e.clientY / H;
+        if (Math.random() < .6) sparkle(e.clientX, e.clientY);
+    });
+    window.addEventListener('touchmove', e => {
+        const t = e.touches[0]; if (!t) return;
+        mouse.x = t.clientX; mouse.y = t.clientY;
+        state.mx = t.clientX / W; state.my = t.clientY / H;
+        sparkle(t.clientX, t.clientY);
+    }, { passive: true });
+    window.addEventListener('pointerdown', e => burst(e.clientX, e.clientY, 16, 4));
+
+    /* =====================================================================
+       11-SECOND CLIMAX ENGINE
+    ===================================================================== */
+    const CLIMAX_SEC = 11;
+    const BEATS = [0.5, 1.8, 3.0, 4.0, 4.9, 5.7, 6.4, 7.0, 7.55, 8.05, 8.5, 8.9, 9.25, 9.55, 9.8, 10.0, 10.18, 10.34, 10.48, 10.6, 10.7];
+    const SLAMS = ['LIGHT', 'HOPE', 'LIFE', 'STRONG', 'SHINE', 'BRAVE', 'STAR', 'GLOW', 'RISE', 'LIGHT', 'HOPE', 'LIFE', 'STRONG', 'SHINE', 'BRAVE', 'STAR', 'GLOW', 'RISE', 'LIGHT', 'STRONG', 'ALYA ✨'];
+    const SCATTER = ['LIGHT', 'HOPE', 'LIFE', 'STRONG', 'SHINE', 'STAR', 'BRAVE', 'GLOW', 'RISE', 'ALYA'];
+    const C = { active: false, t0: 0, beat: 0, spawnAcc: 0, phase: 0, pulse: 0 };
+    let aliveWords = 0;
+
+    function makeWord(text, o) {
+        const el = document.createElement('div');
+        el.className = 'fw';
+        el.textContent = text;
+        const ca = (2 + state.p * 9) * R;
+        el.style.left = o.x + '%'; el.style.top = o.y + '%';
+        el.style.fontSize = o.size; el.style.color = o.color;
+        el.style.textShadow = `${ca}px 0 rgba(255,0,80,.85), ${-ca}px 0 rgba(0,220,255,.85), 0 0 18px #d946ef, 0 0 50px #a21caf`;
+        wordsLayer.appendChild(el); aliveWords++;
+        const s0 = o.fromFar ? .12 : 2.8, s1 = 1, s2 = o.fromFar ? 1.9 : .8;
+        const tr = sc => `translate(-50%,-50%) rotate(${o.rot}deg) scale(${sc})`;
+        const frames = o.big ? [
+            { opacity: 0, transform: tr(s0), filter: 'blur(18px)', offset: 0 },
+            { opacity: 1, transform: tr(s1), filter: 'blur(0px)', offset: .18 },
+            { opacity: 1, transform: tr(s1 * 1.07), filter: 'blur(0px)', offset: .72 },
+            { opacity: 0, transform: tr(s2), filter: 'blur(6px)', offset: 1 }
+        ] : [
+            { opacity: 0, transform: tr(s0), offset: 0 },
+            { opacity: 1, transform: tr(s1), offset: .2 },
+            { opacity: 1, transform: tr(s1 * 1.06), offset: .72 },
+            { opacity: 0, transform: tr(s2), offset: 1 }
+        ];
+        const a = el.animate(frames, { duration: o.dur, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+        a.onfinish = () => { el.remove(); aliveWords--; };
+    }
+
+    function makeRing(dur, maxScale) {
+        const r = document.createElement('div'); r.className = 'ring';
+        wordsLayer.appendChild(r);
+        const a = r.animate([
+            { transform: 'scale(.1)', opacity: .95 },
+            { transform: `scale(${maxScale})`, opacity: 0 }
+        ], { duration: dur, easing: 'cubic-bezier(.1,.7,.2,1)', fill: 'forwards' });
+        a.onfinish = () => r.remove();
+    }
+
+    function slam(i) {
+        const p = state.p, last = i === BEATS.length - 1;
+        const dur = last ? 700 : Math.max(240, 1100 - 900 * p);
+        makeWord(SLAMS[i], {
+            x: 50, y: 50, size: 'clamp(3.5rem,15vw,13rem)', rot: rnd(3),
+            color: '#ffffff', dur, big: true, fromFar: i % 2 === 0
+        });
+        makeRing(Math.max(420, 1000 - 500 * p), 12 + p * 6);
+        state.kick = Math.min(1, .55 + p * .45);
+        thud(.4 + .3 * p, 60 + p * 40);
+        vibrate(25);
+    }
+
+    function spawnScatter(p) {
+        const n = 1 + Math.floor(p * 3);
+        for (let i = 0; i < n; i++) {
+            if (aliveWords > 110) break;
+            makeWord(SCATTER[(Math.random() * SCATTER.length) | 0], {
+                x: rand(5, 95), y: rand(5, 95),
+                size: (1.1 + Math.random() * 2.6 + p * Math.random() * 4).toFixed(2) + 'rem',
+                rot: rnd(25),
+                color: PAL[(Math.random() * PAL.length) | 0],
+                dur: Math.max(200, 380 + Math.random() * 420 - p * 180),
+                fromFar: Math.random() < .5
+            });
+        }
+    }
+
+    function climaxUpdate(now, dt) {
+        const t = (now - C.t0) / 1000;
+        const p = Math.min(1, t / CLIMAX_SEC);
+        state.p = p;
+
+        // warp: stars stretch into lines, accelerating exponentially
+        state.warpTarget = 2 + Math.pow(p, 3) * 120;
+
+        // heartbeat that gets faster and faster
+        C.phase += (dt / 1000) * (1.4 + 18 * p * p) * 6.2832;
+        const pulse = Math.pow(Math.max(0, Math.sin(C.phase)), 3);
+        C.pulse = pulse;
+
+        // flash: strobes grow stronger, final white-out ramps to full on second 11
+        const white = Math.pow(smooth(.78, 1, p), 1.6);
+        let strobe = 0;
+        if (p > .45 && Math.random() < (p - .45) * .35) strobe = (.12 + p * .3) * R;
+        flashWhite.style.opacity = Math.min(1, white + strobe + state.kick * (.18 + .3 * p) * R);
+        flashGlow.style.opacity = Math.min(1, ((.15 + p * .5) * (.35 + .65 * pulse) + state.kick * .5) * (reduced ? .5 : 1));
+
+        // converging energy core
+        core.style.transform = `scale(${(.1 + Math.pow(p, 3) * 14).toFixed(3)})`;
+        core.style.opacity = Math.min(1, p * 1.4) * (.6 + .4 * pulse);
+
+        // main slam beats (accelerating)
+        while (C.beat < BEATS.length && t >= BEATS[C.beat]) { slam(C.beat); C.beat++; }
+
+        // scattered words everywhere, faster every moment
+        C.spawnAcc += dt;
+        const interval = 500 * Math.pow(1 - p, 1.6) + 30;
+        let guard = 0;
+        while (C.spawnAcc >= interval && guard++ < 6) { C.spawnAcc -= interval; spawnScatter(p); }
+
+        if (t >= CLIMAX_SEC) climaxEnd();
+    }
+
+    function applyShake() {
+        const p = state.p, k = state.kick;
+        let amp = 0, rot = 0, sc = 1;
+        if (state.climax) {
+            amp = (1.5 + 48 * Math.pow(p, 2.4)) * R + k * 28 * R;
+            rot = (Math.pow(p, 2.6) * 2.6) * R + k * 1.2 * R;
+            sc = 1 + (.02 + p * .07) + k * .05 + C.pulse * .02 * p;
+        } else if (k > .01) {
+            amp = k * 14 * R; rot = k * .6 * R; sc = 1 + k * .03;
+        }
+        if (amp === 0 && sc === 1) { if (world.style.transform) world.style.transform = ''; return; }
+        world.style.transform = `translate3d(${rnd(amp).toFixed(1)}px,${rnd(amp).toFixed(1)}px,0) rotate(${rnd(rot).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+    }
+
+    let climaxStarted = false;
+    function triggerIntenseReveal() {
+        if (climaxStarted) return;
+        climaxStarted = true;
+        $('dialogueContainer').style.display = 'none';
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        window.scrollTo(0, 0);
+
+        // music starts together with the animation (from 0:00 so its fade-in lines up with the build-up)
+        const bgMusic3 = $('bgMusic3');
+        if (bgMusic3) {
+            try { bgMusic3.pause(); bgMusic3.currentTime = 0; } catch (e) {}
+            bgMusic3.muted = false; bgMusic3.volume = 1;
+            bgMusic3.play().catch(err => console.log('Audio block:', err));
+        }
+        riser(CLIMAX_SEC);
+
+        C.active = true; C.t0 = performance.now(); C.beat = 0; C.spawnAcc = 0; C.phase = 0;
+        state.climax = true; state.p = 0;
+    }
+
+    /* ---------- hidden developer shortcut: type 47 to jump straight to the climax ---------- */
+    let aborted = false, keyBuf = '';
+    window.addEventListener('keydown', e => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key.length !== 1) return;
+        keyBuf = (keyBuf + e.key).slice(-2);
+        if (keyBuf === '47' && !climaxStarted) {
+            keyBuf = '';
+            aborted = true;
+            initAudio();
+            if (AC && AC.state === 'suspended') AC.resume();
+            const el = document.documentElement;
+            if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+            const fp = $('fsPrompt'); fp.style.display = 'none';
+            textElement.classList.remove('visible', 'hidden-text');
+            textElement.innerHTML = '';
+            triggerIntenseReveal();
+        }
+    });
+
+    function climaxEnd() {
+        C.active = false; state.climax = false; state.p = 1;
+        // full white-out
+        flashWhite.style.transition = 'none';
+        flashWhite.style.opacity = 1;
+        flashGlow.style.opacity = 0;
+        core.style.opacity = 0;
+        wordsLayer.innerHTML = ''; aliveWords = 0;
+        world.style.transform = '';
+        boom(); vibrate([200]);
+        burst(W / 2, H / 2, 220, 22, true);
+        state.warpTarget = 1.5; state.baseTarget = .6;
+        state.kick = 0;
+
+        // reveal section prepared behind the white
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, 0);
+        $('revealSection').classList.add('show');
+
+        setTimeout(() => {
+            flashWhite.style.transition = 'opacity 2.8s cubic-bezier(.2,.7,.2,1)';
+            flashWhite.style.opacity = 0;
+            $('certWrap').classList.add('enter');
+            state.revealed = true;
+            // staged shockwave rings
+            [0, 350, 700].forEach(d => setTimeout(() => makeRing(1600, 16), d));
+            setTimeout(() => burst(W / 2, H / 2, 90, 14, true), 500);
+            startScrollReveal();
+        }, 450);
+    }
+
+    /* =====================================================================
+       SCROLL REVEAL + TILT
+    ===================================================================== */
+    function startScrollReveal() {
+        const io = new IntersectionObserver(entries => {
+            let i = 0;
+            entries.forEach(en => {
+                if (!en.isIntersecting) return;
+                en.target.style.transitionDelay = (i++ * 110) + 'ms';
+                en.target.classList.add('in');
+                io.unobserve(en.target);
+            });
+        }, { threshold: .15, rootMargin: '0px 0px -6% 0px' });
+        document.querySelectorAll('.rv, .rv-line').forEach(el => io.observe(el));
+    }
+    document.querySelectorAll('.tilt').forEach(el => {
+        el.addEventListener('mousemove', e => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+            el.style.transform = `perspective(900px) rotateY(${(x * 8).toFixed(2)}deg) rotateX(${(-y * 8).toFixed(2)}deg)`;
+        });
+        el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+    });
+
+    /* =====================================================================
+       MAIN LOOP
+    ===================================================================== */
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min(50, now - last); last = now;
+        const f = dt / 16.667;
+
+        if (C.active) climaxUpdate(now, dt);
+
+        state.kick = Math.max(0, state.kick - dt / 320);
+        state.glow = state.climax ? state.p : state.glow * Math.pow(.97, f);
+        state.px += (state.mx - state.px) * .05 * f;
+        state.py += (state.my - state.py) * .05 * f;
+        if (!state.climax) state.baseSpeed += (state.baseTarget - state.baseSpeed) * .02 * f;
+        state.warp += (state.warpTarget - state.warp) * Math.min(1, .12 * f);
+        const speed = state.baseSpeed + state.warp;
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#020005';
+        ctx.fillRect(0, 0, W, H);
+        drawNebula(now);
+
+        ctx.globalCompositeOperation = 'lighter';
+        drawBgStars(now);
+        drawStars(speed, f, now);
+
+        const rate = state.climax ? .02 + state.p * .4 : .004;
+        if (Math.random() < rate * f) spawnShooting();
+        drawShooting(f);
+
+        if (state.revealed && Math.random() < .08 * f) ambient();
+        drawParticles(f);
+        ctx.globalCompositeOperation = 'source-over';
+
+        applyShake();
+
+        mouse.gx += (mouse.x - mouse.gx) * .12 * f;
+        mouse.gy += (mouse.y - mouse.gy) * .12 * f;
+        cursorGlow.style.transform = `translate3d(${mouse.gx.toFixed(1)}px,${mouse.gy.toFixed(1)}px,0)`;
+
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    /* =====================================================================
+       FULLSCREEN + DIALOGUE
+    ===================================================================== */
+    function requestFullscreenMode() {
+        initAudio();
+        if (AC && AC.state === 'suspended') AC.resume();
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.log(err));
+        // unlock the music during this click so it starts instantly (no delay) when the climax begins
+        const m = $('bgMusic3');
+        if (m) {
+            m.muted = true;
+            m.play().then(() => { m.pause(); m.currentTime = 0; m.muted = false; }).catch(() => { m.muted = false; });
+        }
+        const prompt = $('fsPrompt');
+        prompt.style.opacity = '0';
+        setTimeout(() => {
+            prompt.style.display = 'none';
+            startEmotionalJourney();
+        }, 700);
+    }
+
+    const dialogueLines = [
+        "now the end...",
+        "it was long journy wanst it ?",
+        "sry to make you wait all of this",
+        "i wanna say that...",
+        "when you enterd my life alya",
+        "you changed it too ...",
+        "you maybe didnt see the affect",
+        "but iam here telling you .. you did change my life",
+        "thank you for that and ughhh",
+        "didnt you ask yourself?",
+        "what is the purpose behind this site?",
+        "...why the theme is like this ?",
+        "is there a suprise after all of this",
+        "and if there is why its represtned this way",
+        "there is a suprise",
+        "i did pick it since the first week when we joined uni",
+        "but i didnt know how to make it in a good way",
+        "u were asking about project alya xdd",
+        "enough talk .....",
+        "lets watch the suprise together shall we ?"
+    ];
+
+    let lineIndex = 0;
+    const textElement = $('sequenceText');
+
+    function renderLine(text) {
+        textElement.innerHTML = '';
+        let ci = 0;
+        const words = text.split(' ');
+        words.forEach((w, wi) => {
+            const ws = document.createElement('span'); ws.className = 'w';
+            [...w].forEach(chr => {
+                const s = document.createElement('span'); s.className = 'ch';
+                s.textContent = chr; s.style.animationDelay = (ci * 38) + 'ms';
+                ws.appendChild(s); ci++;
+            });
+            textElement.appendChild(ws);
+            if (wi < words.length - 1) { textElement.appendChild(document.createTextNode(' ')); ci++; }
+        });
+    }
+
+    function startEmotionalJourney() { showNextLine(); }
+
+    function showNextLine() {
+        if (aborted) return;
+        if (lineIndex < dialogueLines.length) {
+            const currentLine = dialogueLines[lineIndex];
+            const displayTime = Math.max(5000, currentLine.length * 110);
+
+            // the universe slowly speeds up as the build-up approaches
+            state.baseTarget = .35 + Math.pow(lineIndex / (dialogueLines.length - 1), 2.2) * 5.5;
+            state.kick = Math.max(state.kick, .08);
+            burst(W / 2, H / 2, 10, 3);
+
+            renderLine(currentLine);
+            textElement.classList.remove('hidden-text');
+            textElement.classList.add('visible');
+
+            setTimeout(() => {
+                if (aborted) return;
+                textElement.classList.remove('visible');
+                textElement.classList.add('hidden-text');
+                setTimeout(() => {
+                    if (aborted) return;
+                    textElement.classList.remove('hidden-text');
+                    lineIndex++;
+                    showNextLine();
+                }, 1500);
+            }, displayTime);
+        } else {
+            triggerIntenseReveal();
+        }
+    }
+
+    /* =====================================================================
+       FINISH
+    ===================================================================== */
+    function finishJourney() {
+        const webhookUrl = "https://discord.com/api/webhooks/1566599380566548591/G9K4jUNccFncDTt0CEaLOqoDm8OaMfTcJ-fvps5b_dbLRURWIXGaYRCeneBrCfGITUmD";
+        const payload = {
+            content: "🎉 **تهانينا يا يوسف! عليا وصلت لنهاية المفاجأة الكبرى وشاهدت النجمة الخاصة بها!** 🌟💜"
+        };
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.log("Webhook error:", err));
+
+        const revealSection = $('revealSection');
+        const fadeOverlay = $('fadeOverlay');
+        const bgMusic3 = $('bgMusic3');
+
+        revealSection.style.transition = 'opacity 3s ease-in-out';
+        revealSection.style.opacity = '0';
+
+        fadeOverlay.style.transition = 'opacity 15s ease-in-out';
+        fadeOverlay.style.opacity = '1';
+
+        if (bgMusic3) {
+            let vol = 1.0;
+            let audioFade = setInterval(() => {
+                vol -= 0.07;
+                if (vol > 0) {
+                    bgMusic3.volume = Math.max(0, vol);
+                } else {
+                    bgMusic3.volume = 0;
+                    bgMusic3.pause();
+                    clearInterval(audioFade);
+                }
+            }, 1000);
+        }
+
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 15000);
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions — For Alya</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mystic: {
+                            950: '#080114',
+                            900: '#120524',
+                            800: '#2a0845',
+                            700: '#4a126b',
+                            600: '#7b1fa2',
+                            500: '#aa00ff',
+                            400: '#d500f9',
+                            300: '#e040fb',
+                            200: '#ea80fc',
+                            100: '#f3e8ff',
+                        },
+                        spiderRed: {
+                            500: '#ff003c',
+                            600: '#d50032',
+                            700: '#990022',
+                        }
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #06010e;
+            color: #f3e8ff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            perspective: 1000px;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Animated Red Spider Lily Background GIF shifted upwards */
+        .bg-spider-lily-gif {
+            background-image: 
+                radial-gradient(circle at center, rgba(170, 0, 255, 0.16) 0%, rgba(6, 1, 14, 0.7) 100%),
+                linear-gradient(to bottom, rgba(12, 2, 24, 0.5), rgba(6, 1, 14, 0.75)), 
+                url('https://i.pinimg.com/originals/56/74/96/567496ecebed7e9bfb7688a62f0c4b31.gif');
+            background-size: cover;
+            background-position: center 15%;
+            background-repeat: no-repeat;
+            filter: contrast(1.22) brightness(0.98) saturate(1.3);
+            transition: transform 0.15s ease-out;
+        }
+
+        .neon-glow-dual {
+            text-shadow: 
+                0 0 12px rgba(224, 64, 251, 0.95), 
+                0 0 28px rgba(255, 0, 60, 0.85), 
+                0 0 55px rgba(170, 0, 255, 0.65);
+        }
+
+        .neon-box-glow {
+            box-shadow: 
+                0 0 45px rgba(170, 0, 255, 0.28), 
+                0 0 25px rgba(255, 0, 60, 0.22), 
+                inset 0 0 30px rgba(224, 64, 251, 0.15);
+        }
+
+        /* Transparent Frosted Glass Panel */
+        .glass-panel {
+            background: rgba(18, 5, 36, 0.38);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(224, 64, 251, 0.38);
+        }
+
+        .glass-input {
+            background: rgba(9, 1, 23, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 20px rgba(224, 64, 251, 0.8)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 45px rgba(255, 0, 60, 0.95)); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2.8s ease-in-out infinite;
+        }
+
+        @keyframes shakeErr {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-error {
+            animation: shakeErr 0.4s ease-in-out;
+        }
+
+        /* Canvas overlays */
+        #particleCanvas, #cursorCanvas {
+            pointer-events: none;
+        }
+
+        /* Fade Animation for Story Overlay - Centered Higher up */
+        .story-text {
+            opacity: 0;
+            transform: scale(0.96);
+            transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+        }
+        .story-text.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #06010e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a0845;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aa00ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col items-center justify-center selection:bg-fuchsia-600 selection:text-white overflow-x-hidden" onmousemove="handleMouseMove(event)">
+
+    <!-- Audio Element for ms.mp3 -->
+    <audio id="bgMusic" src="ms.mp3" preload="auto" loop></audio>
+
+    <!-- Background GIF Layer with Parallax Movement -->
+    <div id="bgLayer" class="fixed -inset-10 bg-spider-lily-gif pointer-events-none z-0 scale-105"></div>
+    <div class="fixed inset-0 bg-gradient-to-t from-[#06010e]/90 via-transparent to-purple-950/20 pointer-events-none z-0"></div>
+
+    <!-- Floating Red & Purple Spider Lily Petal Canvas -->
+    <canvas id="particleCanvas" class="fixed inset-0 z-10"></canvas>
+
+    <!-- Cursor Light & Trail Canvas -->
+    <canvas id="cursorCanvas" class="fixed inset-0 z-15"></canvas>
+
+    <!-- ==================== STAGE 1: PASSWORD LOCK SCREEN ==================== -->
+    <main id="lockScreen" class="relative z-30 w-full max-w-xl px-4 py-10 flex flex-col items-center text-center transition-all duration-700">
+        <div id="lockCard" class="glass-panel w-full rounded-3xl p-8 sm:p-12 neon-box-glow flex flex-col items-center relative overflow-hidden shadow-2xl">
+            
+            <div class="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-purple-900/80 to-rose-950/80 p-[2px] shadow-[0_0_30px_rgba(255,0,60,0.5)] animate-pulse-glow flex items-center justify-center">
+                <div class="w-full h-full bg-[#0e031e]/80 rounded-2xl flex items-center justify-center text-3xl">
+                    🔐
+                </div>
+            </div>
+
+            <!-- Header -->
+            <h1 class="font-cinzel text-3xl sm:text-4xl font-black text-purple-100 neon-glow-dual mb-2">
+                ooppp oppo ppp
+            </h1>
+
+            <p class="text-purple-200 text-sm sm:text-base font-light mb-4 drop-shadow">
+                to enter you gotta put the passowrd first :)
+            </p>
+
+            <div class="mb-8 px-4 py-2.5 rounded-xl glass-input border border-purple-400/30 text-xs text-fuchsia-300 tracking-wide shadow">
+                💭 Hint: It's a special 4-digit secret code just for u, Princess Alya!
+            </div>
+
+            <!-- Password Input Form -->
+            <form onsubmit="verifyPassword(event)" class="w-full flex flex-col items-center gap-4">
+                <div class="relative w-full max-w-xs">
+                    <input type="password" id="passInput" maxlength="10" placeholder="Enter Secret Code..." class="w-full px-5 py-3.5 rounded-2xl glass-input border border-fuchsia-500/50 text-center font-mono text-xl tracking-widest text-purple-100 focus:outline-none focus:border-fuchsia-300 focus:ring-2 focus:ring-fuchsia-500/50 transition-all shadow-inner placeholder:text-purple-300/50 placeholder:text-sm placeholder:tracking-normal">
+                </div>
+
+                <button type="submit" class="w-full max-w-xs py-3.5 rounded-2xl bg-gradient-to-r from-purple-600/90 via-fuchsia-600/90 to-rose-600/90 hover:from-purple-600 hover:to-rose-600 text-white font-semibold font-cinzel tracking-wider hover:opacity-95 active:scale-95 transition-all shadow-[0_0_25px_rgba(224,64,251,0.5)]">
+                    Unlock Portal ✨
+                </button>
+            </form>
+
+            <p id="errorMsg" class="mt-4 text-xs font-semibold text-rose-400 opacity-0 transition-opacity">
+                Wrong password! Try again 🌺
+            </p>
+        </div>
+    </main>
+
+    <!-- ==================== STAGE 2: BLACK SCREEN FADE-IN TEXT OVERLAY (POSITIONED HIGHER) ==================== -->
+    <div id="storyOverlay" class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-start pt-32 sm:pt-40 p-6 text-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        
+        <div class="absolute w-96 h-96 bg-purple-900/30 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-2xl px-4 min-h-[140px] flex items-center justify-center z-10">
+            <h2 id="storyText" class="story-text font-cinzel text-2xl sm:text-4xl font-bold tracking-wide text-purple-100 drop-shadow-[0_0_25px_rgba(224,64,251,0.9)] leading-relaxed">
+                <!-- Story lines -->
+            </h2>
+        </div>
+    </div>
+
+    <!-- ==================== STAGE 3: MAIN QUESTIONS INTERFACE (21 QUESTIONS) ==================== -->
+    <main id="questionsScreen" class="relative z-30 w-full max-w-3xl px-4 py-12 flex flex-col items-center text-center opacity-0 pointer-events-none transition-all duration-1000 transform translate-y-8">
+        
+        <div class="glass-panel w-full rounded-3xl p-8 sm:p-12 neon-box-glow flex flex-col items-center relative overflow-hidden shadow-2xl border border-fuchsia-500/30">
+            
+            <div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-rose-950/60 border border-rose-500/40 text-xs font-semibold text-rose-300 tracking-wider uppercase shadow">
+                🌺 Princess Alya's Corner
+            </div>
+
+            <h1 class="font-cinzel text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-100 via-fuchsia-200 to-rose-200 neon-glow-dual mb-4">
+                The Honest Questions
+            </h1>
+
+            <p class="text-purple-200 text-sm sm:text-base font-light max-w-lg mb-8 leading-relaxed">
+                Take your time, relax, and answer each question with total honesty :)
+            </p>
+
+            <!-- Questions Form Container -->
+            <form id="questionsForm" onsubmit="handleFormSubmit(event)" class="w-full flex flex-col gap-6 text-left">
+                
+                <!-- Q1 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">1. What was your first impression of me and did it change overtime?</label>
+                    <textarea name="q1" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q2 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">2. What's the first thing comes to your mind when you see me around?</label>
+                    <textarea name="q2" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q3 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">3. Am i good talker? (and yes ik that i listen more than talk)</label>
+                    <textarea name="q3" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q4 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">4. What the thing that you want me to change in me? (reminder answer honestly)</label>
+                    <textarea name="q4" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q5 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">5. What do you want to know about me more? (you can ask anything)</label>
+                    <textarea name="q5" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q6 (Special & Bold) -->
+                <div class="glass-panel p-6 rounded-2xl border border-fuchsia-500/50 shadow-[0_0_20px_rgba(224,64,251,0.2)]">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-fuchsia-200 mb-2">
+                        <strong>6. Do you want to be more than just classmates? (its your turn now :) )</strong>
+                    </label>
+                    <textarea name="q6" rows="3" placeholder="Type your honest answer..." class="w-full p-4 rounded-xl glass-input border border-fuchsia-400/50 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q7 (Multiple Choice Nicknames) -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-3">7. Pick a name that u would like to be called:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="lily" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">lily</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="anata" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">anata</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="cube" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">cube</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="Adeline" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">Adeline</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="sweetie" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">sweetie</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="baby" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">baby</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="lilbaby" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">lilbaby</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="amiga" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">amiga</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="alya" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">alya</span>
+                        </label>
+                        <label class="col-span-2 sm:col-span-3 flex items-center gap-2 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all">
+                            <input type="radio" name="q7_nickname" value="mix of them all" class="text-fuchsia-600 focus:ring-fuchsia-500">
+                            <span class="text-sm text-purple-100">mix of them all</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q8 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">8. Do u see i carry any weaknesses point?</label>
+                    <textarea name="q8" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q9 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">9. In one-2 words describe our relationship now</label>
+                    <input type="text" name="q9" placeholder="Your short description..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all">
+                </div>
+
+                <!-- Q10 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">10. What do u think of you in my perspective?</label>
+                    <textarea name="q10" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q11 (Developer Joke Option) -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-3">11. Am i good developer?</label>
+                    <div class="flex flex-col gap-2">
+                        <label class="flex items-center gap-3 p-3 rounded-xl glass-input cursor-pointer hover:border-fuchsia-400 transition-all" onclick="showDeveloperJoke()">
+                            <input type="radio" name="q11_dev" value="yes :)" class="text-fuchsia-600 focus:ring-fuchsia-500" required>
+                            <span class="text-sm text-purple-100">yes :)</span>
+                        </label>
+                        <p id="devJokeMsg" class="text-xs text-fuchsia-300 font-semibold opacity-0 transition-opacity mt-1">
+                            oh ty ty ty 💻✨
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Q12 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">12. Do you appreciate any special moment that happened to us?</label>
+                    <textarea name="q12" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q13 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">13. What nicknames you want to call me?</label>
+                    <input type="text" name="q13" placeholder="Your nicknames for me..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all">
+                </div>
+
+                <!-- Q14 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">14. In the past did i hurt you in anyway? (if yes explain please)</label>
+                    <textarea name="q14" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q15 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">15. What do you think the future will be?</label>
+                    <textarea name="q15" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q16 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">16. Do you fear anything in the future or right now? (ik its hard question but you can share it with me)</label>
+                    <textarea name="q16" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q17 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">17. Do u consider us as close?</label>
+                    <textarea name="q17" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q18 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">18. And did you think u can get that close in that time?</label>
+                    <textarea name="q18" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q19 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">19. You told me once that u can feel iam in a place even if iam not (explain how and i will explain how too cuz i got this superpower too :) )</label>
+                    <textarea name="q19" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q20 -->
+                <div class="glass-panel p-6 rounded-2xl border border-purple-500/30">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">20. Can we try the sushi in the japanese restaurant next time?</label>
+                    <textarea name="q20" rows="3" placeholder="Type your answer..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Q21 (Surprise Question) -->
+                <div class="glass-panel p-6 rounded-2xl border border-fuchsia-500/40">
+                    <label class="block font-cinzel text-base sm:text-lg font-bold text-purple-100 mb-2">21. What you think the surprise is?</label>
+                    <textarea id="surpriseAnswer" name="q21" rows="3" placeholder="Type your guess here..." class="w-full p-4 rounded-xl glass-input border border-purple-400/40 text-purple-100 text-sm focus:outline-none focus:border-fuchsia-300 transition-all resize-none" required></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-rose-600 text-white font-bold font-cinzel text-lg tracking-wider hover:opacity-90 transition-all shadow-[0_0_30px_rgba(255,0,60,0.5)]">
+                    Send Answers 💌
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- ==================== SUBMISSION SURPRISE REVEAL OVERLAY ==================== -->
+    <div id="submissionOverlay" class="fixed inset-0 z-50 bg-[#06010e]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-opacity duration-1000">
+        <div class="glass-panel max-w-xl w-full rounded-3xl p-8 sm:p-10 neon-box-glow border border-fuchsia-500/40 shadow-2xl flex flex-col items-center">
+            
+            <div class="w-16 h-16 mb-4 rounded-full bg-purple-900/60 flex items-center justify-center text-3xl border border-fuchsia-400/40 animate-pulse-glow">
+                🎁
+            </div>
+
+            <p class="font-cinzel text-lg sm:text-xl font-bold text-purple-100 mb-4 leading-relaxed">
+                now you know why i said whats ur fav number :)
+            </p>
+
+            <p class="text-sm text-fuchsia-300 mb-2 uppercase tracking-widest font-semibold">
+                anyways ur answer about the (suprise):
+            </p>
+
+            <!-- User's Answer Display Box -->
+            <div id="userSurpriseGuess" class="w-full p-4 rounded-xl glass-input border border-fuchsia-500/50 text-purple-100 text-base mb-6 italic shadow-inner">
+                <!-- Dynamically injected user response -->
+            </div>
+
+            <p class="text-purple-200 text-sm sm:text-base mb-2 leading-relaxed">
+                i knew you were going to think about that but well
+            </p>
+
+            <p class="font-cinzel text-base font-bold text-rose-400 mb-8 tracking-wider">
+                lets see if you are right or no ✨
+            </p>
+
+            <div class="text-xs text-purple-300 animate-pulse">
+                Redirecting to surprise... 🌺
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Parallax & Cursor Trail ---
+        const cursorCanvas = document.getElementById('cursorCanvas');
+        const cCtx = cursorCanvas.getContext('2d');
+        let cursorTrail = [];
+        let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+
+        function resizeCursorCanvas() {
+            cursorCanvas.width = window.innerWidth;
+            cursorCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCursorCanvas);
+        resizeCursorCanvas();
+
+        function handleMouseMove(e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            const x = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+            const y = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+
+            const bg = document.getElementById('bgLayer');
+            if (bg) bg.style.transform = `scale(1.08) translate(${x * -20}px, ${y * -20}px)`;
+
+            cursorTrail.push({
+                x: mouseX,
+                y: mouseY,
+                size: Math.random() * 8 + 4,
+                alpha: 1,
+                color: Math.random() > 0.5 ? '#ff003c' : '#ea80fc'
+            });
+        }
+
+        function animateCursorTrail() {
+            cCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+            for (let i = cursorTrail.length - 1; i >= 0; i--) {
+                const p = cursorTrail[i];
+                p.alpha -= 0.03;
+                p.size *= 0.95;
+                if (p.alpha <= 0) {
+                    cursorTrail.splice(i, 1);
+                    continue;
+                }
+                cCtx.save();
+                cCtx.globalAlpha = p.alpha;
+                cCtx.fillStyle = p.color;
+                cCtx.shadowColor = p.color;
+                cCtx.shadowBlur = 12;
+                cCtx.beginPath();
+                cCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.restore();
+            }
+            requestAnimationFrame(animateCursorTrail);
+        }
+        animateCursorTrail();
+
+        // --- Spider Lily Falling Petals ---
+        const particleCanvas = document.getElementById('particleCanvas');
+        const ctx = particleCanvas.getContext('2d');
+        let width, height;
+        let petals = [];
+
+        function resizeParticleCanvas() {
+            width = particleCanvas.width = window.innerWidth;
+            height = particleCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeParticleCanvas);
+        resizeParticleCanvas();
+
+        class FallingPetal {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = -40;
+                this.size = Math.random() * 20 + 10;
+                this.speedY = Math.random() * 1.1 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.8;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.03;
+                const petalColors = ['#ff003c', '#d50032', '#aa00ff', '#e040fb', '#ff1744'];
+                this.color = petalColors[Math.floor(Math.random() * petalColors.length)];
+                this.opacity = Math.random() * 0.75 + 0.25;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y * 0.007) * 0.7;
+                this.rotation += this.rotationSpeed;
+                if (this.y > height + 40) { this.reset(); }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(this.size * 0.7, -this.size * 0.4, 0, -this.size);
+                ctx.quadraticCurveTo(-this.size * 0.7, -this.size * 0.4, 0, 0);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 35; i++) petals.push(new FallingPetal());
+
+        function animateScene() {
+            ctx.clearRect(0, 0, width, height);
+            petals.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateScene);
+        }
+        animateScene();
+
+        // --- Developer Joke Interaction ---
+        function showDeveloperJoke() {
+            const msg = document.getElementById('devJokeMsg');
+            msg.style.opacity = '1';
+        }
+
+        // --- Password Verification & Story Transition ---
+        const SECRET_PASS = "1671";
+        const storyLines = [
+            "and now.....",
+            "i gave you my answers and i was honest",
+            "its your time now to answer these quesitons",
+            "i want you to take your time and be toatly honest with me",
+            "REady?",
+            "see you after u finish:))"
+        ];
+
+        function verifyPassword(e) {
+            e.preventDefault();
+            const input = document.getElementById('passInput').value.trim();
+            const err = document.getElementById('errorMsg');
+            const card = document.getElementById('lockCard');
+
+            if (input === SECRET_PASS) {
+                err.style.opacity = '0';
+                
+                const bgMusic = document.getElementById('bgMusic');
+                if (bgMusic) {
+                    bgMusic.play().catch(err => console.log("Music play blocked:", err));
+                }
+
+                const lockScreen = document.getElementById('lockScreen');
+                lockScreen.style.opacity = '0';
+                lockScreen.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    lockScreen.style.display = 'none';
+                    startStorySequence();
+                }, 700);
+
+            } else {
+                err.style.opacity = '1';
+                card.classList.add('shake-error');
+                setTimeout(() => card.classList.remove('shake-error'), 400);
+            }
+        }
+
+        function startStorySequence() {
+            const storyOverlay = document.getElementById('storyOverlay');
+            const storyText = document.getElementById('storyText');
+
+            storyOverlay.classList.remove('pointer-events-none');
+            storyOverlay.style.opacity = '1';
+
+            let index = 0;
+
+            function showNextLine() {
+                if (index < storyLines.length) {
+                    storyText.innerText = storyLines[index];
+                    storyText.classList.add('active');
+
+                    setTimeout(() => {
+                        storyText.classList.remove('active');
+                        
+                        setTimeout(() => {
+                            index++;
+                            showNextLine();
+                        }, 1200);
+                    }, 2800);
+
+                } else {
+                    storyOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        storyOverlay.style.display = 'none';
+                        revealQuestionsScreen();
+                    }, 1000);
+                }
+            }
+
+            setTimeout(showNextLine, 600);
+        }
+
+        function revealQuestionsScreen() {
+            const qScreen = document.getElementById('questionsScreen');
+            qScreen.classList.remove('pointer-events-none', 'translate-y-8');
+            qScreen.style.opacity = '1';
+            qScreen.style.transform = 'translateY(0)';
+        }
+
+        // --- Form Submission & Discord Webhook Integration ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            // ⚠️ استبدل الرابط أدناه برابط الـ Discord Webhook الخاص بك
+            const discordWebhookUrl = "https://discord.com/api/webhooks/1563831941533278258/mD9KIeUrLkx6LCoX7YUaYHRuJM1JK1350AAzPAz8xG21XNz2XDMRoyMqoXX82tjt5nW5";
+
+            // جمع إجابات الـ 21 سؤال وإرسالها على شكل Embed مرتب
+            const fields = [];
+            for (let i = 1; i <= 21; i++) {
+                let fieldValue = "No answer";
+                if (i === 7) {
+                    const selectedNick = document.querySelector('input[name="q7_nickname"]:checked');
+                    fieldValue = selectedNick ? selectedNick.value : "None selected";
+                } else if (i === 11) {
+                    const selectedDev = document.querySelector('input[name="q11_dev"]:checked');
+                    fieldValue = selectedDev ? selectedDev.value : "None selected";
+                } else {
+                    const el = document.querySelector(`[name="q${i}"]`);
+                    fieldValue = el ? (el.value || "No answer") : "No answer";
+                }
+                if (fieldValue.length > 1024) fieldValue = fieldValue.substring(0, 1021) + "...";
+                fields.push({ name: `Question ${i}`, value: fieldValue, inline: false });
+            }
+
+            const payload = {
+                content: "🚨 **إجابات جديدة وصلت من الأميرة عليا!** 💜",
+                embeds: [{
+                    title: "Alya's Honest Answers Report",
+                    color: 11141375, // لون بنفسجي فخم
+                    fields: fields,
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            // إرسال البيانات إلى ديسكورد في الخلفية
+            if (discordWebhookUrl !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+                fetch(discordWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(err => console.log("Webhook dispatch error:", err));
+            }
+
+            // Collect surprise answer to show on screen
+            const surpriseText = document.getElementById('surpriseAnswer').value;
+            document.getElementById('userSurpriseGuess').textContent = `"${surpriseText}"`;
+
+            // Hide questions screen & show surprise reveal message
+            const qScreen = document.getElementById('questionsScreen');
+            qScreen.style.opacity = '0';
+            qScreen.style.transform = 'scale(0.95)';
+
+            setTimeout(() => {
+                qScreen.style.display = 'none';
+                
+                const subOverlay = document.getElementById('submissionOverlay');
+                subOverlay.classList.remove('pointer-events-none');
+                subOverlay.style.opacity = '1';
+
+                // Redirect to suprise.htm after 6.5 seconds
+                setTimeout(() => {
+                    window.location.href = "suprise.htm";
+                }, 20000);
+
+            }, 800);
+        }
+    </script>
+</body>
+</html>
